@@ -6,6 +6,7 @@ const
     {locator} = require('locator.js'),
     {processJWTIfExists} = require('middleware/auth/processJWTIfExists.js'),
     AuthService = new (require('services/auth/AuthService.js'))(),
+    ClipService = new (require('services/clip/ClipService.js'))(),
     {parseFeed, saveParsedFeedToDatabase} = require('tasks/feedParser.js'),
     {nunjucks} = require('nunjucks.js'),
     {routes} = require('routes.js'),
@@ -31,6 +32,19 @@ function appFactory () {
 
     .use('clips', locator.get('ClipService'))
     .use('playlists', locator.get('PlaylistService'))
+
+    .use('clips/:id', function (req, res) {
+
+      ClipService.get(req.params.id)
+        .then(clip => {
+          res.locals.currentPage = 'Clip';
+          res.render('player.html', clip);
+        })
+        .catch(e => {
+          console.log(e);
+          res.sendStatus(404);
+        });
+    })
 
     .get('/parse', (req, res) => {
       if (req.body.rssURL) {
